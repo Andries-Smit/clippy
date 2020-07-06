@@ -1,0 +1,169 @@
+diff --git a/node_modules/clippyjs/dist/clippy.esm.js b/node_modules/clippyjs/dist/clippy.esm.js
+index b283572..272d1c9 100644
+--- a/node_modules/clippyjs/dist/clippy.esm.js
++++ b/node_modules/clippyjs/dist/clippy.esm.js
+@@ -443,13 +443,13 @@ var Agent = function Agent (path,data,sounds) {
+  * @param {Number} x
+  * @param {Number} y
+  */
+-Agent.prototype.gestureAt = function gestureAt (x, y) {
++Agent.prototype.gestureAt = function gestureAt (x, y, callback) {
+     var d = this._getDirection(x, y);
+     var gAnim = 'Gesture' + d;
+     var lookAnim = 'Look' + d;
+ 
+     var animation = this.hasAnimation(gAnim) ? gAnim : lookAnim;
+-    return this.play(animation);
++    return this.play(animation, undefined, callback);
+ };
+ 
+ /***
+@@ -477,30 +477,34 @@ Agent.prototype.hide = function hide (fast, callback) {
+ };
+ 
+ 
+-Agent.prototype.moveTo = function moveTo (x, y, duration) {
++Agent.prototype.moveTo = function moveTo (x, y, duration, callbackMove) {
+     var dir = this._getDirection(x, y);
+     var anim = 'Move' + dir;
+     if (duration === undefined) { duration = 1000; }
+ 
+     this._addToQueue(function (complete) {
+         // the simple case
++        var done = function () {
++            complete();
++            callbackMove && callbackMove();
++        }
+         if (duration === 0) {
+             this._el.css({ top: y, left: x });
+             this.reposition();
+-            complete();
++            done();
+             return;
+         }
+ 
+         // no animations
+         if (!this.hasAnimation(anim)) {
+-            this._el.animate({ top: y, left: x }, duration, complete);
++            this._el.animate({ top: y, left: x }, duration, done);
+             return;
+         }
+ 
+         var callback = $.proxy(function (name, state) {
+             // when exited, complete
+             if (state === Animator.States.EXITED) {
+-                complete();
++                done();
+             }
+             // if waiting,
+             if (state === Animator.States.WAITING) {
+@@ -529,7 +533,7 @@ Agent.prototype._playInternal = function _playInternal (animation, callback) {
+ };
+ 
+ Agent.prototype.play = function play (animation, timeout, cb) {
+-    if (!this.hasAnimation(animation)) { return false; }
++    if (!this.hasAnimation(animation)) { cb && cb();return false; }
+ 
+     if (timeout === undefined) { timeout = 5000; }
+ 
+@@ -564,13 +568,14 @@ Agent.prototype.play = function play (animation, timeout, cb) {
+  *
+  * @param {Boolean=} fast
+  */
+-Agent.prototype.show = function show (fast) {
++Agent.prototype.show = function show (fast, callback) {
+ 
+     this._hidden = false;
+     if (fast) {
+         this._el.show();
+         this.resume();
+         this._onQueueEmpty();
++        callback && callback();
+         return;
+     }
+ 
+@@ -581,16 +586,20 @@ Agent.prototype.show = function show (fast) {
+     }
+ 
+     this.resume();
+-    return this.play('Show');
++    return this.play('Show', undefined, callback);
+ };
+ 
+ /***
+  *
+  * @param {String} text
+  */
+-Agent.prototype.speak = function speak (text, hold) {
++Agent.prototype.speak = function speak (text, hold, callback) {
+     this._addToQueue(function (complete) {
+-        this._balloon.speak(complete, text, hold);
++        var done = function() {
++            complete();
++            callback && callback();
++        };
++        this._balloon.speak(done, text, hold);
+     }, this);
+ };
+ 
+@@ -649,14 +658,15 @@ Agent.prototype.animations = function animations () {
+  * Play a random animation
+  * @return {jQuery.Deferred}
+  */
+-Agent.prototype.animate = function animate () {
++Agent.prototype.animate = function animate (callback) {
+     var animations = this.animations();
+     var anim = animations[Math.floor(Math.random() * animations.length)];
+     // skip idle animations
+     if (anim.indexOf('Idle') === 0) {
+         return this.animate();
+     }
+-    return this.play(anim);
++    // callback
++    return this.play(anim, undefined, callback);
+ };
+ 
+ /**************************** Utils ************************************/
+diff --git a/node_modules/clippyjs/dist/clippy.js b/node_modules/clippyjs/dist/clippy.js
+index 3d4643d..849bc5c 100644
+--- a/node_modules/clippyjs/dist/clippy.js
++++ b/node_modules/clippyjs/dist/clippy.js
+@@ -655,14 +655,14 @@ Agent.prototype.animations = function animations () {
+  * Play a random animation
+  * @return {jQuery.Deferred}
+  */
+-Agent.prototype.animate = function animate () {
++Agent.prototype.animate = function animate (cb) {
+     var animations = this.animations();
+     var anim = animations[Math.floor(Math.random() * animations.length)];
+     // skip idle animations
+     if (anim.indexOf('Idle') === 0) {
+-        return this.animate();
++        return this.animate(cb);
+     }
+-    return this.play(anim);
++    return this.play(anim, undefined, cb);
+ };
+ 
+ /**************************** Utils ************************************/
+diff --git a/node_modules/clippyjs/lib/agent.js b/node_modules/clippyjs/lib/agent.js
+index 9afb042..c4adbb9 100644
+--- a/node_modules/clippyjs/lib/agent.js
++++ b/node_modules/clippyjs/lib/agent.js
+@@ -232,14 +232,14 @@ export default class Agent {
+      * Play a random animation
+      * @return {jQuery.Deferred}
+      */
+-    animate () {
++    animate (callback) {
+         let animations = this.animations();
+         let anim = animations[Math.floor(Math.random() * animations.length)];
+         // skip idle animations
+         if (anim.indexOf('Idle') === 0) {
+             return this.animate();
+         }
+-        return this.play(anim);
++        return this.play(anim, undefined, callback);
+     }
+ 
+     /**************************** Utils ************************************/

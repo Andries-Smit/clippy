@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="clippy.widget.clippy" needsEntityContext="false" xmlns="http://www.mendix.com/widget/1.0/">
+    <name>Clippy</name>
+    <description/>
+    <icon />
+    <properties>
+        <property key="agent" type="enumeration" defaultValue="Clippy">
+            <caption>Assistant</caption>
+            <category>General</category>
+            <description/>
+            <enumerationValues>
+                <enumerationValue key="Clippy">Clippy</enumerationValue>
+                <enumerationValue key="Bonzi">Bonzi</enumerationValue>
+                <enumerationValue key="F1">F1</enumerationValue>
+                <enumerationValue key="Genie">Genie</enumerationValue>
+                <enumerationValue key="Genius">Genius</enumerationValue>
+                <enumerationValue key="Links">Links</enumerationValue>
+                <enumerationValue key="Merlin">Merlin</enumerationValue>
+                <enumerationValue key="Peedy">Peedy</enumerationValue>
+                <enumerationValue key="Rocky">Rocky</enumerationValue>
+                <enumerationValue key="Rover">Rover</enumerationValue>
+            </enumerationValues>
+        </property>
+    </properties>
+</widget>
